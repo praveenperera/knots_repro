@@ -9,7 +9,15 @@ USER root
 # SYSTEM DEPS
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    guix build-essential curl git cpio python3 gnupg ca-certificates  && \
+      netbase \
+      guix \
+      build-essential \
+      curl \
+      git \
+      cpio \
+      python3 \
+      gnupg \
+      ca-certificates && \
     rm -rf /var/lib/apt/lists/*
 
 # BUILD ARGS
@@ -22,6 +30,17 @@ RUN groupadd --system guix && \
              --create-home \
              --shell /bin/bash \
              guix
+
+RUN mkdir -p /var/log/guix /gnu/store /var/guix \
+    /home/guix  \
+    /home/guix/.cache/guix/checkouts \
+    /home/guix/.config/guix \
+    /home/guix/.guix-profile \
+    /home/guix/.cache/guix && \
+    chown guix:guix /var/log/guix -R && \
+    chown guix:guix /var/guix -R && \
+    chown guix:guix /gnu/store -R && \
+    chown guix:guix /home/guix -R
 
 USER guix
 ENV HOME=/home/guix
@@ -54,7 +73,11 @@ ENV SOURCES_PATH=/home/guix/depends-SOURCES_PATH
 ENV BASE_CACHE=/home/guix/depends-BASE_CACHE
 ENV SDK_PATH=/home/guix/MacOS-SDKs
 
-WORKDIR /home/guix/knots
-COPY container_scripts/build.sh /root/knots/build.sh
 
-RUN mkdir /artifacts 
+RUN echo 'export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"' >> /home/guix/.profile && \
+    echo 'export GUIX_PROFILE="$HOME/.config/guix/current"' >> /home/guix/.profile && \
+    echo 'export GUIX_LOCPATH="$HOME/.guix-profile/lib/locale"' >> /home/guix/.bashrc && \
+    echo 'export GUIX_PROFILE="$HOME/.config/guix/current"' >> /home/guix/.bashrc 
+
+WORKDIR /home/guix/knots
+COPY container_scripts/build.sh /home/guix/knots/build.sh
